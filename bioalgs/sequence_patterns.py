@@ -5,6 +5,16 @@ def PatternCount(Text, Pattern):
             count += 1
     return count
 
+def FindClumps(genome, k, L, t):
+    patterns = set()
+    n = len(genome)
+    for i in range(n - L):
+        window = genome[i:i+L]
+        m = FrequencyMap(window, k)
+        for key, value in m.items():
+            if value >= t:
+                patterns.add(key)
+    return list(patterns)
 
 def FrequencyMap(Text, k):
     freq = {}
