@@ -1,3 +1,6 @@
+from bioalgs.genome_metrics import HammingDistance
+
+
 def PatternCount(Text, Pattern):
     count = 0
     for i in range(len(Text) - len(Pattern) + 1):
@@ -73,6 +76,19 @@ def FrequentWordsWithMismatches(text, k, d):
             m = max(m, c)
     return [key for key, val in freqMap.items() if val == m] 
 
+def DistanceBetweenPatternAndStrings(pattern, dna):
+    k = len(pattern)
+    distance = 0
+    sp_str = dna.split()
+
+    for text in sp_str:
+        hd = float('inf')
+        for i in range(len(text) - k + 1):
+            w = text[i:i+k]
+            if hd > HammingDistance(pattern, w):
+                hd = HammingDistance(pattern, w)
+        distance += hd
+    return distance
     
 def FrequentWordsWithMismatchesAndRC(text, k, d):
     freqMap = {}
