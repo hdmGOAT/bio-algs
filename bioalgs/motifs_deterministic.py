@@ -1,3 +1,33 @@
+from bioalgs.sequence_patterns import FrequentWordsWithMismatches, Neighbors
+
+import math
+
+def MotifsEntropy(motifs):
+    profile = Profile(motifs)
+    k = len(motifs[0])
+    entropy = 0.0
+
+    for j in range(k):
+        for base in "ACGT":
+            p = profile[base][j]
+            if p > 0:
+                entropy -= p * math.log2(p)
+
+    return entropy
+
+def MotifEnumeration(Dna, k, d):
+    dna_list = Dna.split()
+    neighbor_sets = []
+
+    for dna in dna_list:
+        motifs = set()
+        for i in range(len(dna) - k + 1):
+            kmer = dna[i:i+k]
+            motifs |= Neighbors(kmer, d)
+        neighbor_sets.append(motifs)
+
+    return set.intersection(*neighbor_sets)
+
 def Count(Motifs):
     count = {base: [0] * len(Motifs[0]) for base in "ACGT"}
     for motif in Motifs:
