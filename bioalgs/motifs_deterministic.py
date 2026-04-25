@@ -26,6 +26,21 @@ def MedianString(dna, k):
 
     return median
 
+def MedianStringList(dna, k):
+    best_distance = float('inf')
+    best_patterns = []
+    patterns = Neighbors('A' * k, k)
+
+    for pattern in patterns:
+        d = DistanceBetweenPatternAndStrings(pattern, dna)
+
+        if d < best_distance:
+            best_distance = d
+            best_patterns = [pattern]
+        elif d == best_distance:
+            best_patterns.append(pattern)
+
+    return best_patterns
 
 def MotifEnumeration(Dna, k, d):
     dna_list = Dna.split()
