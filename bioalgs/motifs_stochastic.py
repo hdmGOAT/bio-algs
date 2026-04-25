@@ -71,6 +71,16 @@ def RandomizedMotifSearch(Dna, k, t):
         else:
             return best_motifs
 
+def RandomizedMotifSearchNTimes(Dna, k, t, n):
+    motifs = RandomMotifs(Dna, k, t)
+    best_motifs = motifs[:]
+
+    for _ in range(n):
+        motifs = RandomizedMotifSearch(Dna, k, t)
+        if Score(motifs) < Score(best_motifs):
+            best_motifs = motifs
+    
+    return best_motifs
 
 def Normalize(Probabilities):
     total = sum(Probabilities.values())
