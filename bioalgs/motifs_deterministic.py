@@ -1,4 +1,4 @@
-from bioalgs.sequence_patterns import FrequentWordsWithMismatches, Neighbors
+from bioalgs.sequence_patterns import DistanceBetweenPatternAndStrings, FrequentWordsWithMismatches, Neighbors
 
 import math
 
@@ -14,6 +14,18 @@ def MotifsEntropy(motifs):
                 entropy -= p * math.log2(p)
 
     return entropy
+
+def MedianString(dna, k):
+    distance = float('inf')
+    patterns = Neighbors('A' * k, k)
+    for pattern in patterns:
+        d = DistanceBetweenPatternAndStrings(pattern, dna)
+        if distance > d:
+            distance = d
+            median = pattern
+
+    return median
+
 
 def MotifEnumeration(Dna, k, d):
     dna_list = Dna.split()
