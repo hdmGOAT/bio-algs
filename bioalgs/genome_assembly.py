@@ -25,3 +25,13 @@ def overlap(patterns):
             if b.startswith(suffix):
                 overlap[a].append(b)
     return overlap
+
+def debrujin(text, k):
+    g = defaultdict(list)
+    for s in range(1, len(text)-k+2):
+        e = s+k-1
+        last = text[s-1:e-1]
+        now = text[s:e]
+        g[last].append(now)
+
+    return g
