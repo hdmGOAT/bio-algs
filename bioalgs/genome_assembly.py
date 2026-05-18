@@ -26,7 +26,7 @@ def overlap(patterns):
                 overlap[a].append(b)
     return overlap
 
-def debrujin(text, k):
+def debrujinFromString(text, k):
     g = defaultdict(list)
     for s in range(1, len(text)-k+2):
         e = s+k-1
@@ -34,4 +34,10 @@ def debrujin(text, k):
         now = text[s:e]
         g[last].append(now)
 
+    return g
+
+def debrujinFromKmers(kmers):
+    g = defaultdict(list)
+    for kmer in kmers:
+        g[kmer[:-1]].append(kmer[1:])
     return g
