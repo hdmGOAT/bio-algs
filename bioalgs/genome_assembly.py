@@ -110,3 +110,10 @@ def eulerianPath(graph):
     path.append(curr)
     path.reverse()
     return path
+
+def stringReconstruction(patterns):
+    db = debrujinFromKmers(patterns)
+    path = eulerianPath(db)
+    text  = genome_path(path)
+
+    return text
