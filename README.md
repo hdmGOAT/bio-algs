@@ -1,4 +1,4 @@
-This repository contains code I wrote for the Biology Meets Programming: Bioinformatics for Beginners coursework.
+This repository contains code I wrote for UC San Diego's Bioinformatics coursework.
 
 ## Functional Structure
 
