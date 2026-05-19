@@ -66,3 +66,47 @@ def eulerianCycle(graph):
 
     return list(reversed(path))
 
+def find_start(graph):
+    indeg = defaultdict(int)
+    outdeg = defaultdict(int)
+
+    for u in graph:
+        for v in graph[u]:
+            outdeg[u] += 1
+            indeg[v] += 1
+
+    start = None
+
+    for node in set(list(indeg.keys()) + list(outdeg.keys())):
+        out = outdeg[node]
+        inn = indeg[node]
+
+        if out - inn == 1:
+            return node
+
+        if out > 0:
+            start = node
+
+    return start
+
+def eulerianPath(graph):
+    start = find_start(graph)
+    if start is None:
+        return []
+
+    stack = []
+    path = []
+    curr = start
+
+    while stack or graph.get(curr, []):
+        if not graph.get(curr, []):
+            path.append(curr)
+            curr = stack.pop()
+            continue
+
+        stack.append(curr)
+        curr = graph[curr].pop()
+
+    path.append(curr)
+    path.reverse()
+    return path
