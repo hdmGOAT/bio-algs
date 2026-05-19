@@ -41,3 +41,28 @@ def debrujinFromKmers(kmers):
     for kmer in kmers:
         g[kmer[:-1]].append(kmer[1:])
     return g
+
+def eulerianCycle(graph):
+    curr = None
+    for v, adj in graph.items():
+        if adj:
+            curr = v
+            break
+
+    if curr is None:
+        return []
+
+    stack = []
+    path = []
+    while graph[curr] or stack:
+        if not graph[curr]:
+            path.append(curr)
+            curr = stack.pop()
+            continue
+        next = graph[curr].pop()
+        stack.append(curr)
+        curr=next
+    path.append(curr)
+
+    return list(reversed(path))
+
