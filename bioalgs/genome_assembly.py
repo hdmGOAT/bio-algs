@@ -1,4 +1,5 @@
 from collections import defaultdict
+from itertools import product
 def composition(text, k):
     c = []
     seen = set()
@@ -117,3 +118,13 @@ def stringReconstruction(patterns):
     text  = genome_path(path)
 
     return text
+
+def kUniversalString(k):
+    pieces = [''.join(p) for p in product('01', repeat=k)]     
+
+    graph = debrujinFromKmers(pieces)
+    cycle = eulerianCycle(graph)
+
+    text = genome_path(cycle)
+
+    return text[:-k+1]
