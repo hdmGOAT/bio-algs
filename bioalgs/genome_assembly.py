@@ -43,6 +43,30 @@ def debrujinFromKmers(kmers):
         g[kmer[:-1]].append(kmer[1:])
     return g
 
+def pairedDeburjinFromKDpairs(
+    kdpairs
+):
+    g = defaultdict(list)
+    for left, right in kdpairs:
+        prefix = (left[:-1], right[:-1])
+        suffix = (left[1:], right[1:])
+        g[prefix].append(suffix)
+    return g
+
+def stringSpelledByGappedPatterns(path, k, d):
+    first = [p[0] for p in path]
+    second = [p[1] for p in path]
+
+    prefix_string = genome_path(first)
+    suffix_string = genome_path(second)
+
+    for i in range(k + d, len(prefix_string)):
+        if prefix_string[i] != suffix_string[i - k - d]:
+            return None 
+
+    return prefix_string + suffix_string[-(k + d):]
+
+
 def eulerianCycle(graph):
     curr = None
     for v, adj in graph.items():
