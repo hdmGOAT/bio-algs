@@ -66,7 +66,6 @@ def stringSpelledByGappedPatterns(path, k, d):
 
     return prefix_string + suffix_string[-(k + d):]
 
-
 def eulerianCycle(graph):
     curr = None
     for v, adj in graph.items():
@@ -152,3 +151,61 @@ def kUniversalString(k):
     text = genome_path(cycle)
 
     return text[:-k+1]
+
+def in_out_degrees(graph):
+    indeg = defaultdict(int)
+    outdeg = defaultdict(int)
+
+    for v, adj in graph.items():
+        outdeg[v] = len(adj)
+        for w in adj:
+            indeg[w] += 1
+
+    for v in graph:
+        indeg.setdefault(v, 0)
+        outdeg.setdefault(v, 0)
+
+    return indeg, outdeg
+
+def maximalNonBranchingPaths(graph):
+    paths = []
+    ind, outd = in_out_degrees(graph)
+    visited_nodes = set()
+
+    def is_1_in_1_out(v):
+        return ind[v] == 1 and outd[v] == 1
+
+    for v in graph:
+        if not is_1_in_1_out(v) and outd[v] > 0:
+            for w in graph[v]:
+                path = [v, w]
+                curr = w
+                
+                while is_1_in_1_out(curr):
+                    visited_nodes.add(curr)
+                    u = graph[curr][0]
+                    path.append(u)
+                    curr = u
+                paths.append(path)
+
+    for v in graph:
+        if is_1_in_1_out(v) and v not in visited_nodes:
+            visited_nodes.add(v)
+            cycle = [v]
+            curr = graph[v][0]
+            
+            while curr != v:
+                cycle.append(curr)
+                visited_nodes.add(curr)
+                curr = graph[curr][0]
+                
+            cycle.append(v)
+            paths.append(cycle)
+
+    return paths
+def generateContigs(patterns):
+    g = debrujinFromKmers(patterns)
+    paths = maximalNonBranchingPaths(g)
+    strings =[genome_path(path) for path in paths] 
+    out = sorted(strings)
+    return out
