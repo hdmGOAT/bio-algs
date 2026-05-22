@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, deque
 from itertools import product
 def composition(text, k):
     c = []
@@ -118,18 +118,27 @@ def eulerianPath(graph):
     if start is None:
         return []
 
+    adj = {node: deque(edges) for node, edges in graph.items()}
+
+    def has_edges(node):
+        neighbors = adj.get(node)
+        return neighbors is not None and len(neighbors) > 0
+
+    def next_edge(node):
+        return adj[node].popleft()
+
     stack = []
     path = []
     curr = start
 
-    while stack or graph.get(curr, []):
-        if not graph.get(curr, []):
+    while stack or has_edges(curr):
+        if not has_edges(curr):
             path.append(curr)
             curr = stack.pop()
             continue
 
         stack.append(curr)
-        curr = graph[curr].pop()
+        curr = next_edge(curr)
 
     path.append(curr)
     path.reverse()
