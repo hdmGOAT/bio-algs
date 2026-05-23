@@ -85,3 +85,16 @@ def cyclicSpectrum(peptide, aaMass):
                 cS.append(peptideMass - sub_mass)
 
     return sorted(cS)
+
+def BFCountPeptides(mass, aaMass):
+    masses = sorted(set(aaMass.values()))
+
+    dp = [0] * (mass + 1)
+    dp[0] = 1
+
+    for i in range(1, mass + 1):
+        for a in masses:
+            if i >= a:
+                dp[i] += dp[i - a]
+
+    return dp[mass]
