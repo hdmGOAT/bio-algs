@@ -13,6 +13,16 @@ def load_codon_table(
         )
     }
 
+def load_integer_mass_table(path: Path = Path(__file__).parent / "constants" / "integer_mass_table.txt"):
+    return {
+        parts[0]: int(parts[1])
+        for parts in (
+            line.split()
+            for line in path.read_text().splitlines()
+            if line.strip()
+        )
+    }
+
 def translateRNAtoAminoAcidstr(rna, table) -> str:
     protein = []
 
@@ -46,3 +56,32 @@ def findSubstringsThatEncodeAA(dna: str, peptide: str, table):
             result.append(window)
 
     return result
+
+def linearSpectrum(peptide, aaMass):
+    prefixMass = [0]
+    for i in range(len(peptide)):
+        prefixMass.append(prefixMass[i] + aaMass[peptide[i]])
+
+    lS = [0]
+    for i in range(len(peptide)):
+        for j in range(i + 1, len(peptide) + 1):
+            lS.append(prefixMass[j] - prefixMass[i])
+
+    return sorted(lS)
+def cyclicSpectrum(peptide, aaMass):
+    prefixMass = [0]
+    for i in range(len(peptide)):
+        prefixMass.append(prefixMass[i] + aaMass[peptide[i]])
+
+    peptideMass = prefixMass[-1]
+    cS = [0]
+
+    for i in range(len(peptide)):
+        for j in range(i + 1, len(peptide) + 1):
+            sub_mass = prefixMass[j] - prefixMass[i]
+            cS.append(sub_mass)
+
+            if i > 0 and j < len(peptide):
+                cS.append(peptideMass - sub_mass)
+
+    return sorted(cS)
