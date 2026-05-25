@@ -101,42 +101,10 @@ def BFCountPeptides(mass, aaMass):
     return dp[mass]
 
 def is_consistent(peptide, spectrum, aaMass):
-    linear = linearSpectrum(peptide, aaMass)
-    c_linear = Counter(linear)
-    c_spec = Counter(spectrum)
-
-    for mass, cnt in c_linear.items():
-        if c_spec[mass] < cnt:
-            return False
-    return True
-
+    pass
 def expand(peptides, aaMass):
-    new = set()
-    for p in peptides:
-        for aa in aaMass.keys():
-            new.add(p + (aa,))
-    return new
+    pass
 def mass(peptide, aaMass):
-    return sum(aaMass[aa] for aa in peptide)
+    pass
 def cyclopeptideSequencing(spectrum, aaMass):
-    parent_mass = max(spectrum)
-
-    candidates = {()}
-    final = set()
-
-    while candidates:
-        candidates = expand(candidates, aaMass)
-
-        for p in list(candidates):
-            m = mass(p, aaMass)
-
-            if m == parent_mass:
-                if cyclicSpectrum(p, aaMass) == sorted(spectrum):
-                    canon = min(p[i:] + p[:i] for i in range(len(p)))
-                    final.add(canon)
-                candidates.remove(p)
-
-            elif m > parent_mass or not is_consistent(p, spectrum, aaMass):
-                candidates.remove(p)
-
-    return final
+    pass
