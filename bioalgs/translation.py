@@ -122,7 +122,7 @@ def cyclopeptideSequencing(spectrum, aaMass):
     parent_mass = max(spectrum)
 
     candidates = {()}
-    final = []
+    final = set()
 
     while candidates:
         candidates = expand(candidates, aaMass)
@@ -132,8 +132,8 @@ def cyclopeptideSequencing(spectrum, aaMass):
 
             if m == parent_mass:
                 if cyclicSpectrum(p, aaMass) == sorted(spectrum):
-                    if p not in final:
-                        final.append(p)
+                    canon = min(p[i:] + p[:i] for i in range(len(p)))
+                    final.add(canon)
                 candidates.remove(p)
 
             elif m > parent_mass or not is_consistent(p, spectrum, aaMass):
