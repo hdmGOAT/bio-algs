@@ -98,3 +98,9 @@ def BFCountPeptides(mass, aaMass):
                 dp[i] += dp[i - a]
 
     return dp[mass]
+
+def cyclopeptideSequencing(spectrum):
+    candidates = set()
+    final = []
+
+
