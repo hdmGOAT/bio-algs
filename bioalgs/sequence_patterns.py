@@ -105,12 +105,15 @@ def FrequentWordsWithMismatchesAndRC(text, k, d):
     return [key for key, val in freqMap.items() if val == m] 
 
 
-def Complement(Pattern):
-    complements = {"A": "T", "T": "A", "G": "C", "C": "G"}
-    out = ""
-    for char in Pattern:
-        out += complements[char]
-    return out
+def Complement(pattern):
+    is_rna = "U" in pattern
+
+    if is_rna:
+        complements = {"A": "U", "U": "A", "G": "C", "C": "G"}
+    else:
+        complements = {"A": "T", "T": "A", "G": "C", "C": "G"}
+
+    return "".join(complements[base] for base in pattern)
 
 
 def ReverseComplement(Pattern):
