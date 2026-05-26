@@ -69,6 +69,19 @@ def linearSpectrum(peptide, aaMass):
             lS.append(prefixMass[j] - prefixMass[i])
 
     return sorted(lS)
+
+def linearSpectrumMass(peptide_masses):
+    prefixMass = [0]
+    for i in range(len(peptide_masses)):
+        prefixMass.append(prefixMass[i] + peptide_masses[i])
+
+    lS = [0]
+    for i in range(len(peptide_masses)):
+        for j in range(i + 1, len(peptide_masses) + 1):
+            lS.append(prefixMass[j] - prefixMass[i])
+
+    return sorted(lS)
+
 def cyclicSpectrum(peptide, aaMass):
     prefixMass = [0]
     for i in range(len(peptide)):
@@ -87,6 +100,24 @@ def cyclicSpectrum(peptide, aaMass):
 
     return sorted(cS)
 
+def cyclicSpectrumMass(peptide_masses):
+    prefixMass = [0]
+    for i in range(len(peptide_masses)):
+        prefixMass.append(prefixMass[i] + peptide_masses[i])
+
+    peptideMass = prefixMass[-1]
+    cS = [0]
+
+    for i in range(len(peptide_masses)):
+        for j in range(i + 1, len(peptide_masses) + 1):
+            sub_mass = prefixMass[j] - prefixMass[i]
+            cS.append(sub_mass)
+
+            if i > 0 and j < len(peptide_masses):
+                cS.append(peptideMass - sub_mass)
+
+    return sorted(cS)
+
 def BFCountPeptides(mass, aaMass):
     masses = sorted(set(aaMass.values()))
 
@@ -100,11 +131,71 @@ def BFCountPeptides(mass, aaMass):
 
     return dp[mass]
 
+
 def is_consistent(peptide, spectrum, aaMass):
-    pass
+    # peptide is a tuple of masses
+    return not (Counter(linearSpectrum(peptide, aaMass)) - Counter(spectrum))
+
+def is_consistent_mass(peptide_masses, spectrum):
+    return not (Counter(linearSpectrumMass(peptide_masses)) - Counter(spectrum))
+
+
 def expand(peptides, aaMass):
-    pass
-def mass(peptide, aaMass):
-    pass
+    masses = sorted(set(aaMass.values()))
+    expanded = set()
+    for peptide in peptides:
+        for m in masses:
+            expanded.add(peptide + (m,))
+    return expanded
+
+
+def mass(peptide, aaMass=None):
+    return sum(peptide)
+
+
+def canonical(peptide):
+    n = len(peptide)
+    return min(peptide[i:] + peptide[:i] for i in range(n))
+
+
 def cyclopeptideSequencing(spectrum, aaMass):
-    pass
+    parentMass = max(spectrum)
+    candidates = {()}
+    final = set()
+
+    while candidates:
+        candidates = expand(candidates, aaMass)
+
+        for peptide in list(candidates):
+            m = sum(peptide)
+
+            if m == parentMass:
+                if cyclicSpectrum(peptide, aaMass) == spectrum:
+                    final.add(canonical(peptide))
+                candidates.remove(peptide)
+
+            elif m > parentMass or not is_consistent(peptide, spectrum, aaMass):
+                candidates.remove(peptide)
+
+    return final
+
+def cyclopeptideSequencingMass(spectrum, aaMass):
+    parentMass = max(spectrum)
+    candidates = {()}
+    final = set()
+
+    while candidates:
+        candidates = expand(candidates, aaMass)
+
+        for peptide in list(candidates):
+            m = sum(peptide)
+
+            if m == parentMass:
+                if cyclicSpectrumMass(peptide) == spectrum:
+                    final.add(peptide)
+                candidates.remove(peptide)
+
+            elif m > parentMass or not is_consistent_mass(peptide, spectrum):
+                candidates.remove(peptide)
+
+    return final
