@@ -148,8 +148,15 @@ def expand(peptides, aaMass):
             expanded.add(peptide + (m,))
     return expanded
 
+def expandExtended(peptides, aaMass):
+    masses = [n for n in range(57, 201)]
+    expanded = set()
+    for peptide in peptides:
+        for m in masses:
+            expanded.add(peptide + (m,))
+    return expanded
 
-def mass(peptide, aaMass=None):
+def mass(peptide):
     return sum(peptide)
 
 
@@ -199,3 +206,112 @@ def cyclopeptideSequencingMass(spectrum, aaMass):
                 candidates.remove(peptide)
 
     return final
+
+def scoreCyclopeptide(peptide, spectrum, aaMass):
+    pepspec = cyclicSpectrum(peptide, aaMass)
+    pCount = Counter(pepspec)
+    sCount = Counter(spectrum)
+
+    similarity = sum((pCount & sCount).values())
+
+    return similarity
+
+def scoreCyclopeptideMass(peptide_masses, spectrum):
+    pepspec = cyclicSpectrumMass(peptide_masses)
+    pCount = Counter(pepspec)
+    sCount = Counter(spectrum)
+    similarity = sum((pCount & sCount).values())
+
+    return similarity
+
+def linearScoreCyclopeptideMass(peptide_masses, spectrum):
+    pepspec = linearSpectrumMass(peptide_masses)
+    pCount = Counter(pepspec)
+    sCount = Counter(spectrum)
+    similarity = sum((pCount & sCount).values())
+
+    return similarity
+
+def linearScoreCyclopeptide(peptide, spectrum, aaMass):
+    pepspec = linearSpectrum(peptide, aaMass)
+    pCount = Counter(pepspec)
+    sCount = Counter(spectrum)
+    similarity = sum((pCount & sCount).values())
+
+    return similarity
+
+def trimMass(leaderboard, spectrum, n):
+    scored = [
+        (peptide, linearScoreCyclopeptideMass(peptide, spectrum))
+        for peptide in leaderboard
+    ]
+
+    scored.sort(key=lambda x: x[1], reverse=True)
+
+    if len(scored) <= n:
+        return [p for p, _ in scored]
+
+    cutoff = scored[n-1][1]
+
+    return {p for p, score in scored if score >= cutoff}
+
+def trim(leaderboard, spectrum, n, aaMass):
+    scored = [
+        (peptide, linearScoreCyclopeptide(peptide, spectrum, aaMass))
+        for peptide in leaderboard
+    ]
+
+    scored.sort(key=lambda x: x[1], reverse=True)
+
+    if len(scored) <= n:
+        return {p for p, _ in scored}
+    cutoff = scored[n-1][1]
+
+    return {p for p, score in scored if score >= cutoff}
+
+def leaderboardCyclopeptideSequencing(spectrum, n, aaMass):
+    leaderboard = {()}
+    leaderPeptides = set()
+    leaderScore = -1
+    parentMass = max(spectrum)
+
+    while leaderboard:
+        leaderboard = expand(leaderboard, aaMass)
+
+        for peptide in list(leaderboard):
+            if mass(peptide) == parentMass:
+                score = scoreCyclopeptideMass(peptide, spectrum)
+                if score > leaderScore:
+                    leaderPeptides = {peptide}
+                    leaderScore = score
+                elif score == leaderScore:
+                    leaderPeptides.add(peptide)
+            elif mass(peptide) > parentMass:
+                leaderboard.remove(peptide)
+
+        leaderboard = trimMass(leaderboard, spectrum, n)
+
+    return leaderPeptides
+def extendedLeaderboardCyclopeptideSequencing(spectrum, n, aaMass):
+    leaderboard = {()}
+    leaderPeptides = set()
+    leaderScore = -1
+    parentMass = max(spectrum)
+
+    while leaderboard:
+        leaderboard = expandExtended(leaderboard, aaMass)
+
+        for peptide in list(leaderboard):
+            if mass(peptide) == parentMass:
+                score = scoreCyclopeptideMass(peptide, spectrum)
+                if score > leaderScore:
+                    leaderPeptides = {peptide}
+                    leaderScore = score
+                elif score == leaderScore:
+                    leaderPeptides.add(peptide)
+            elif mass(peptide) > parentMass:
+                leaderboard.remove(peptide)
+
+        leaderboard = trimMass(leaderboard, spectrum, n)
+
+    return leaderPeptides
