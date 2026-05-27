@@ -315,3 +315,12 @@ def extendedLeaderboardCyclopeptideSequencing(spectrum, n, aaMass):
         leaderboard = trimMass(leaderboard, spectrum, n)
 
     return leaderPeptides
+
+def convolution(spectrum):
+    conv = []
+    for i in range(len(spectrum)):
+        for j in range(i + 1, len(spectrum)):
+            diff = spectrum[j] - spectrum[i]
+            if diff > 0:
+                conv.append(diff)
+    return conv
