@@ -321,6 +321,10 @@ def convolution(spectrum):
     for i in range(len(spectrum)):
         for j in range(i + 1, len(spectrum)):
             diff = spectrum[j] - spectrum[i]
-            if diff > 0:
+            if diff >= 57 and diff <= 200:
                 conv.append(diff)
     return conv
+
+def convolutionCyclopeptideSequencing(spectrum, m, n, aaMass):
+
+    pass
