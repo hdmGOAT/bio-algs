@@ -148,8 +148,7 @@ def expand(peptides, aaMass):
             expanded.add(peptide + (m,))
     return expanded
 
-def expandExtended(peptides, aaMass):
-    masses = [n for n in range(57, 201)]
+def expandExtended(peptides, masses):
     expanded = set()
     for peptide in peptides:
         for m in masses:
@@ -292,14 +291,14 @@ def leaderboardCyclopeptideSequencing(spectrum, n, aaMass):
         leaderboard = trimMass(leaderboard, spectrum, n)
 
     return leaderPeptides
-def extendedLeaderboardCyclopeptideSequencing(spectrum, n, aaMass):
+def extendedLeaderboardCyclopeptideSequencing(spectrum, n, masses):
     leaderboard = {()}
     leaderPeptides = set()
     leaderScore = -1
     parentMass = max(spectrum)
-
+    
     while leaderboard:
-        leaderboard = expandExtended(leaderboard, aaMass)
+        leaderboard = expandExtended(leaderboard, masses)
 
         for peptide in list(leaderboard):
             if mass(peptide) == parentMass:
@@ -325,6 +324,19 @@ def convolution(spectrum):
                 conv.append(diff)
     return conv
 
-def convolutionCyclopeptideSequencing(spectrum, m, n, aaMass):
+def top_m_freq(convs, m):
+    counts = Counter(convs)
 
-    pass
+    freqs = sorted(counts.values(), reverse=True)
+
+    threshold = freqs[m-1]  if m <= len(freqs) else freqs[-1]
+
+    return [mass for mass, c in counts.items() if c >= threshold]
+
+def convolutionCyclopeptideSequencing(spectrum, m, n):
+    convs = convolution(spectrum)
+    frequent_masses = top_m_freq(convs, m)
+
+    masses = sorted(frequent_masses)
+    return extendedLeaderboardCyclopeptideSequencing(spectrum, n, masses)
+
