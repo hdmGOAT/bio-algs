@@ -208,40 +208,50 @@ def cyclopeptideSequencingMass(spectrum, aaMass):
 
 def scoreCyclopeptide(peptide, spectrum, aaMass):
     pepspec = cyclicSpectrum(peptide, aaMass)
-    pCount = Counter(pepspec)
-    sCount = Counter(spectrum)
+    return spectrum_match_count(pepspec, spectrum)
 
-    similarity = sum((pCount & sCount).values())
+def spectrum_match_count(pepspec, spectrum, tolerance=0.0):
+    if tolerance <= 0:
+        pCount = Counter(pepspec)
+        sCount = Counter(spectrum)
+        return sum((pCount & sCount).values())
 
-    return similarity
+    pepspec_sorted = sorted(pepspec)
+    spectrum_sorted = sorted(spectrum)
+    i = 0
+    j = 0
+    matches = 0
 
-def scoreCyclopeptideMass(peptide_masses, spectrum):
+    while i < len(pepspec_sorted) and j < len(spectrum_sorted):
+        a = pepspec_sorted[i]
+        b = spectrum_sorted[j]
+
+        if abs(a - b) <= tolerance:
+            matches += 1
+            i += 1
+            j += 1
+        elif a < b - tolerance:
+            i += 1
+        else:
+            j += 1
+
+    return matches
+
+def scoreCyclopeptideMass(peptide_masses, spectrum, tolerance=0.0):
     pepspec = cyclicSpectrumMass(peptide_masses)
-    pCount = Counter(pepspec)
-    sCount = Counter(spectrum)
-    similarity = sum((pCount & sCount).values())
+    return spectrum_match_count(pepspec, spectrum, tolerance)
 
-    return similarity
-
-def linearScoreCyclopeptideMass(peptide_masses, spectrum):
+def linearScoreCyclopeptideMass(peptide_masses, spectrum, tolerance=0.0):
     pepspec = linearSpectrumMass(peptide_masses)
-    pCount = Counter(pepspec)
-    sCount = Counter(spectrum)
-    similarity = sum((pCount & sCount).values())
+    return spectrum_match_count(pepspec, spectrum, tolerance)
 
-    return similarity
-
-def linearScoreCyclopeptide(peptide, spectrum, aaMass):
+def linearScoreCyclopeptide(peptide, spectrum, aaMass, tolerance=0.0):
     pepspec = linearSpectrum(peptide, aaMass)
-    pCount = Counter(pepspec)
-    sCount = Counter(spectrum)
-    similarity = sum((pCount & sCount).values())
+    return spectrum_match_count(pepspec, spectrum, tolerance)
 
-    return similarity
-
-def trimMass(leaderboard, spectrum, n):
+def trimMass(leaderboard, spectrum, n, tolerance=0.0):
     scored = [
-        (peptide, linearScoreCyclopeptideMass(peptide, spectrum))
+        (peptide, linearScoreCyclopeptideMass(peptide, spectrum, tolerance))
         for peptide in leaderboard
     ]
 
@@ -254,9 +264,9 @@ def trimMass(leaderboard, spectrum, n):
 
     return {p for p, score in scored if score >= cutoff}
 
-def trim(leaderboard, spectrum, n, aaMass):
+def trim(leaderboard, spectrum, n, aaMass, tolerance=0.0):
     scored = [
-        (peptide, linearScoreCyclopeptide(peptide, spectrum, aaMass))
+        (peptide, linearScoreCyclopeptide(peptide, spectrum, aaMass, tolerance))
         for peptide in leaderboard
     ]
 
@@ -268,7 +278,13 @@ def trim(leaderboard, spectrum, n, aaMass):
 
     return {p for p, score in scored if score >= cutoff}
 
-def leaderboardCyclopeptideSequencing(spectrum, n, aaMass):
+def leaderboardCyclopeptideSequencing(
+    spectrum,
+    n,
+    aaMass,
+    score_tolerance=0.0,
+    parent_mass_tolerance=0.0,
+):
     leaderboard = {()}
     leaderPeptides = set()
     leaderScore = -1
@@ -278,20 +294,27 @@ def leaderboardCyclopeptideSequencing(spectrum, n, aaMass):
         leaderboard = expand(leaderboard, aaMass)
 
         for peptide in list(leaderboard):
-            if mass(peptide) == parentMass:
-                score = scoreCyclopeptideMass(peptide, spectrum)
+            peptide_mass = mass(peptide)
+            if abs(peptide_mass - parentMass) <= parent_mass_tolerance:
+                score = scoreCyclopeptideMass(peptide, spectrum, score_tolerance)
                 if score > leaderScore:
                     leaderPeptides = {peptide}
                     leaderScore = score
                 elif score == leaderScore:
                     leaderPeptides.add(peptide)
-            elif mass(peptide) > parentMass:
+            elif peptide_mass > parentMass + parent_mass_tolerance:
                 leaderboard.remove(peptide)
 
-        leaderboard = trimMass(leaderboard, spectrum, n)
+        leaderboard = trimMass(leaderboard, spectrum, n, score_tolerance)
 
     return leaderPeptides
-def extendedLeaderboardCyclopeptideSequencing(spectrum, n, masses):
+def extendedLeaderboardCyclopeptideSequencing(
+    spectrum,
+    n,
+    masses,
+    score_tolerance=0.0,
+    parent_mass_tolerance=0.0,
+):
     leaderboard = {()}
     leaderPeptides = set()
     leaderScore = -1
@@ -301,17 +324,18 @@ def extendedLeaderboardCyclopeptideSequencing(spectrum, n, masses):
         leaderboard = expandExtended(leaderboard, masses)
 
         for peptide in list(leaderboard):
-            if mass(peptide) == parentMass:
-                score = scoreCyclopeptideMass(peptide, spectrum)
+            peptide_mass = mass(peptide)
+            if abs(peptide_mass - parentMass) <= parent_mass_tolerance:
+                score = scoreCyclopeptideMass(peptide, spectrum, score_tolerance)
                 if score > leaderScore:
                     leaderPeptides = {peptide}
                     leaderScore = score
                 elif score == leaderScore:
                     leaderPeptides.add(peptide)
-            elif mass(peptide) > parentMass:
+            elif peptide_mass > parentMass + parent_mass_tolerance:
                 leaderboard.remove(peptide)
 
-        leaderboard = trimMass(leaderboard, spectrum, n)
+        leaderboard = trimMass(leaderboard, spectrum, n, score_tolerance)
 
     return leaderPeptides
 
@@ -330,12 +354,23 @@ def convolution(spectrum, rounded=False):
 
     return conv
 
-def bucket_convolution(convs, width=2):
+def _nearest_mass(value, masses):
+    return min(masses, key=lambda m: abs(m - value))
+
+def bucket_convolution(
+    convs,
+    width=2,
+    snap_to_aa_masses=False,
+    snap_tolerance=None,
+):
     if not convs:
         return {}
 
     counts = Counter(convs)
     masses = sorted(counts)
+    aa_masses = None
+    if snap_to_aa_masses:
+        aa_masses = sorted(set(load_integer_mass_table().values()))
     buckets = []
 
     current = [masses[0]]
@@ -356,7 +391,11 @@ def bucket_convolution(convs, width=2):
     for bucket in buckets:
         center = round(sum(bucket) / len(bucket))
         freq = sum(counts[m] for m in bucket)
-        result[center] = freq
+        if aa_masses:
+            snapped = _nearest_mass(center, aa_masses)
+            if snap_tolerance is None or abs(snapped - center) <= snap_tolerance:
+                center = snapped
+        result[center] = result.get(center, 0) + freq
 
     return result
 
@@ -385,15 +424,30 @@ def convolutionCyclopeptideSequencing(
     round_convulition,
     bucket=False,
     bucket_width=2,
+    snap_to_aa_masses=False,
+    snap_tolerance=None,
+    score_tolerance=0.0,
+    parent_mass_tolerance=0.0,
 ):
     convs = convolution(spectrum, round_convulition)
     if bucket:
-        bucket_counts = bucket_convolution(convs, bucket_width)
+        bucket_counts = bucket_convolution(
+            convs,
+            width=bucket_width,
+            snap_to_aa_masses=snap_to_aa_masses,
+            snap_tolerance=snap_tolerance,
+        )
         frequent_masses = top_m_freq_bucketed(bucket_counts, m)
     else:
         frequent_masses = top_m_freq(convs, m)
 
     masses = sorted(frequent_masses)
     print(len(masses))
-    return extendedLeaderboardCyclopeptideSequencing(spectrum, n, masses)
+    return extendedLeaderboardCyclopeptideSequencing(
+        spectrum,
+        n,
+        masses,
+        score_tolerance=score_tolerance,
+        parent_mass_tolerance=parent_mass_tolerance,
+    )
 

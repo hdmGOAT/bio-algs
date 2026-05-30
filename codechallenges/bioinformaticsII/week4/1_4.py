@@ -5,6 +5,22 @@ from bioalgs.translation import convolution, convolutionCyclopeptideSequencing, 
 p = Path(__file__).parent / "datasets" / "real_spectrum.txt" 
 
 spec = list(map(float, p.read_text().split()))
-spec = [round(x) for x in spec]
 
-print(convolutionCyclopeptideSequencing(spec, 40, 5000, True, bucket=True))
+print(
+    " ".join(
+    map ( str,
+	convolutionCyclopeptideSequencing(
+		spec,
+		40,
+		5000,
+		False,
+		bucket=True,
+        bucket_width=4,
+		snap_to_aa_masses=True,
+		score_tolerance=0.5,
+		parent_mass_tolerance=0.5,
+	)
+    )
+    )
+)
+
