@@ -315,14 +315,59 @@ def extendedLeaderboardCyclopeptideSequencing(spectrum, n, masses):
 
     return leaderPeptides
 
-def convolution(spectrum):
+def convolution(spectrum, rounded=False):
     conv = []
+
     for i in range(len(spectrum)):
         for j in range(i + 1, len(spectrum)):
             diff = spectrum[j] - spectrum[i]
-            if diff >= 57 and diff <= 200:
+
+            if rounded:
+                diff = round(diff)
+
+            if 57 <= diff <= 200:
                 conv.append(diff)
+
     return conv
+
+def bucket_convolution(convs, width=2):
+    if not convs:
+        return {}
+
+    counts = Counter(convs)
+    masses = sorted(counts)
+    buckets = []
+
+    current = [masses[0]]
+    bucket_start = masses[0]
+
+    for m in masses[1:]:
+        if m - bucket_start <= width:
+            current.append(m)
+        else:
+            buckets.append(current)
+            current = [m]
+            bucket_start = m
+
+    buckets.append(current)
+
+    result = {}
+
+    for bucket in buckets:
+        center = round(sum(bucket) / len(bucket))
+        freq = sum(counts[m] for m in bucket)
+        result[center] = freq
+
+    return result
+
+def top_m_freq_bucketed(bucket_counts, m):
+    if not bucket_counts:
+        return []
+
+    freqs = sorted(bucket_counts.values(), reverse=True)
+    threshold = freqs[m - 1] if m <= len(freqs) else freqs[-1]
+
+    return [mass for mass, c in bucket_counts.items() if c >= threshold]
 
 def top_m_freq(convs, m):
     counts = Counter(convs)
@@ -333,10 +378,22 @@ def top_m_freq(convs, m):
 
     return [mass for mass, c in counts.items() if c >= threshold]
 
-def convolutionCyclopeptideSequencing(spectrum, m, n):
-    convs = convolution(spectrum)
-    frequent_masses = top_m_freq(convs, m)
+def convolutionCyclopeptideSequencing(
+    spectrum,
+    m,
+    n,
+    round_convulition,
+    bucket=False,
+    bucket_width=2,
+):
+    convs = convolution(spectrum, round_convulition)
+    if bucket:
+        bucket_counts = bucket_convolution(convs, bucket_width)
+        frequent_masses = top_m_freq_bucketed(bucket_counts, m)
+    else:
+        frequent_masses = top_m_freq(convs, m)
 
     masses = sorted(frequent_masses)
+    print(len(masses))
     return extendedLeaderboardCyclopeptideSequencing(spectrum, n, masses)
 
