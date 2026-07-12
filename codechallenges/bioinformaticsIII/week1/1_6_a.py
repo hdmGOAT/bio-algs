@@ -12,7 +12,7 @@ sample input
 3 3 0 2
 1 3 2 2
 '''
-
+from pathlib import Path
 def manhattanTourist(n, m, down, right):
     out = [[0] * (m + 1) for _ in range(n + 1)]
 
@@ -33,4 +33,18 @@ def manhattanTourist(n, m, down, right):
 
     return out[n][m]
 
+p = Path(__file__).parent / "datasets" / "dataset_30205_10.txt"
 
+lines = p.read_text().splitlines()
+
+nm = lines[0]
+matrices = lines[1:]
+
+sep = matrices.index("-")
+
+down = [list(map(int, row.split())) for row in matrices[:sep]]
+right = [list(map(int, row.split())) for row in matrices[sep+1:]]
+
+n, m = map(int, nm.split())
+
+print(manhattanTourist(n,m,down,right))
