@@ -37,3 +37,7 @@ from .motifs_stochastic import (
     RandomMotifs,
     WeightedDie,
 )
+from .sequence_alignment import (
+    AlignmentGraph,
+    OutputLCS,
+)
