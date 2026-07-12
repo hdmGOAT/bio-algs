@@ -39,3 +39,27 @@ def OutputLCS(backtrack, v, i, j):
             j -= 1
 
     return "".join(reversed(lcs))
+
+def LongestPathInDAG(start, end, adj):
+    n = len(adj)
+
+    dist = [-float("inf")] * n
+    parent: list[int | None] = [None] * n
+    dist[start] = 0
+
+    for u in range(start, n):
+        for v, w in adj[u]:
+            if dist[u] + w > dist[v]:
+                dist[v] = dist[u] + w
+                parent[v] = u
+
+    path = []
+    curr = end
+
+    while curr is not None:
+        path.append(curr)
+        curr = parent[curr]
+
+    path.reverse()
+
+    return dist[end], path

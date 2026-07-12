@@ -39,5 +39,6 @@ from .motifs_stochastic import (
 )
 from .sequence_alignment import (
     AlignmentGraph,
+    LongestPathInDAG,
     OutputLCS,
 )
