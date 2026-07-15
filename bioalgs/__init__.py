@@ -41,4 +41,6 @@ from .sequence_alignment import (
     AlignmentGraph,
     LongestPathInDAG,
     OutputLCS,
+    gaGraph,
+    OutputGA,
 )
