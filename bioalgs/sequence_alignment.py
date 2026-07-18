@@ -1,3 +1,5 @@
+from pathlib import Path
+
 def AlignmentGraph(v, w):
     n = len(v)
     m = len(w)
@@ -132,3 +134,12 @@ def OutputGA(bt, a, b):
             i -= 1
 
     return "".join(reversed(aligned_a)), "".join(reversed(aligned_b))
+
+def load_scoring_matrix(path: Path = Path(__file__).parent / "constants" / "PAM250.txt"):
+    lines = [line.split() for line in path.read_text().splitlines() if line.strip()]
+    letters = lines[0]
+    return {
+        (row[0], col_letter): int(score)
+        for row in lines[1:]
+        for col_letter, score in zip(letters, row[1:])
+    }
