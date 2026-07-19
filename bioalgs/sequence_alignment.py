@@ -205,3 +205,67 @@ def OutputLA(bt, a, b, i, j):
             break
 
     return "".join(reversed(aligned_a)), "".join(reversed(aligned_b))
+
+def overlapAlignment(a, b, match, mismatch, indel):
+    a_len = len(a)
+    b_len = len(b)
+    
+    score = [[0] * (b_len + 1) for _ in range(a_len + 1)]
+    bt = [[""] * (b_len + 1) for _ in range(a_len + 1)]
+    
+    for j in range(1, b_len + 1):
+        score[0][j] = score[0][j-1] - indel
+        bt[0][j] = "l"
+        
+    for i in range(1, a_len + 1):
+        score[i][0] = 0
+        bt[i][0] = "u"
+        
+    for i in range(1, a_len + 1):
+        for j in range(1, b_len + 1):
+            if a[i-1] == b[j-1]:
+                diag = score[i-1][j-1] + match
+            else:
+                diag = score[i-1][j-1] - mismatch
+                
+            left = score[i][j-1] - indel
+            up = score[i-1][j] - indel
+            
+            best = max(diag, left, up)
+            score[i][j] = best
+            if best == diag:
+                bt[i][j] = "d"
+            elif best == left:
+                bt[i][j] = "l"
+            else:
+                bt[i][j] = "u"
+                
+    max_score = -float('inf')
+    max_j = 0
+    for j in range(b_len + 1):
+        if score[a_len][j] > max_score:
+            max_score = score[a_len][j]
+            max_j = j
+            
+    return score, bt, max_score, max_j
+
+def OutputOA(bt, a, b, i, j):
+    aligned_a = []
+    aligned_b = []
+    
+    while i > 0 and j > 0:
+        if bt[i][j] == "d":
+            aligned_a.append(a[i-1])
+            aligned_b.append(b[j-1])
+            i -= 1
+            j -= 1
+        elif bt[i][j] == "l":
+            aligned_a.append("-")
+            aligned_b.append(b[j-1])
+            j -= 1
+        else:
+            aligned_a.append(a[i-1])
+            aligned_b.append("-")
+            i -= 1
+            
+    return "".join(reversed(aligned_a)), "".join(reversed(aligned_b))
